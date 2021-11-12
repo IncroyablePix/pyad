@@ -5,15 +5,16 @@ import subprocess
 class GlobalOU:
 	insert_file = """/tmp/ou.ldif"""
 
-	def __init__(self, ou_name: str, master_ou_name: str, description: str):
+	def __init__(self, ou_name: str, ou_hierarchy: list = ["""People"""], description: str = ""):
 		self.ou_name = ou_name
-		self.master_ou_name = master_ou_name
+		self.ou_hierarchy = ou_hierarchy
 		self.description = description
 
 
 	def register(self, ldappasswd: str = None):
 		with open(GlobalOU.insert_file, """w""") as temp_file:
-			temp_file.write(f"""dn: ou={self.ou_name}, ou={self.master_ou_name}, dc=localdomain\n""")
+            ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", self.ou_hierarchy))
+			temp_file.write(f"""dn: ou={self.ou_name}, {ous}, dc=localdomain\n""")
 			temp_file.write(f"""ou: {self.ou_name}\n""")
 			temp_file.write(f"""description: {self.description}\n""")
 			temp_file.write(f"""objectClass: top\n""")
