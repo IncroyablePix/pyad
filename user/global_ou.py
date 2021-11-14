@@ -13,7 +13,7 @@ class GlobalOU:
 
 	def register(self, ldappasswd: str = None):
 		with open(GlobalOU.insert_file, """w""") as temp_file:
-            ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", self.ou_hierarchy))
+			ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", self.ou_hierarchy))
 			temp_file.write(f"""dn: ou={self.ou_name}, {ous}, dc=localdomain\n""")
 			temp_file.write(f"""ou: {self.ou_name}\n""")
 			temp_file.write(f"""description: {self.description}\n""")

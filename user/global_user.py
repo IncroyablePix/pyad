@@ -15,9 +15,10 @@ class GlobalUser:
 		self.password = GlobalUser.__hash_password(password)
 
 
-	def register(self, gid: int = None, ldappasswd: str = None):
+	def register(self, gid: int = None, ou_hierarchy: list = [], ldappasswd: str = None):
 		with open(GlobalUser.insert_file, """w""") as temp_file:
-			temp_file.write(f"""dn: uid={self.user_name},ou=People,dc=localdomain\n""")
+			ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", ou_hierarchy))
+			temp_file.write(f"""dn: uid={self.user_name},{ous},dc=localdomain\n""")
 			temp_file.write(f"""objectClass: top\n""")
 			temp_file.write(f"""objectClass: inetorgperson\n""")
 			temp_file.write(f"""objectClass: posixAccount\n""")
