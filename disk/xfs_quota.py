@@ -57,6 +57,6 @@ class XFSQuota:
 		with open(XFSQuota.project_file, """a""") as projid:
 			projid.write(f"""{project_name}:{project_id}\n""")
 
-		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'project -s {project_name}' {self.partition_name}""")
-		result += subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit -p bhard={hard}m {project_name}' {self.partition_name}""")
+		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'project -s {project_name}' {self.partition_name}""", shell = True)
+		result += subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit -p bhard={hard}m {project_name}' {self.partition_name}""", shell = True)
 		return result

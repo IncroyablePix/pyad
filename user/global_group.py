@@ -11,9 +11,9 @@ class GlobalGroup:
 		self.description = description
 
 
-	def register(self, gid: int = None, ldappasswd: str = None):
+	def register(self, gid: int = None, ldappasswd: str = None, dc: str = "localdomain"):
 		with open(GlobalGroup.insert_file, """w""") as temp_file:
-			temp_file.write(f"""dn: cn={self.group_name},ou={self.ou_name},dc=localdomain\n""")
+			temp_file.write(f"""dn: cn={self.group_name},ou={self.ou_name},dc={dc}\n""")
 			temp_file.write(f"""description: {self.description}\n""")
 			temp_file.write(f"""objectClass: top\n""")
 			temp_file.write(f"""objectClass: posixGroup\n""")
@@ -23,7 +23,7 @@ class GlobalGroup:
 		if ldappasswd != None:
 			options += f"""-w {ldappasswd}"""
 
-		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc=localdomain' -f {GlobalGroup.insert_file} -x""", shell = True)
+		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc={dc}' -f {GlobalGroup.insert_file} -x""", shell = True)
 		return result
 
 

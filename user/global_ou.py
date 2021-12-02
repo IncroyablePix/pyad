@@ -11,10 +11,10 @@ class GlobalOU:
 		self.description = description
 
 
-	def register(self, ldappasswd: str = None):
+	def register(self, ldappasswd: str = None, dc: str = "localdomain"):
 		with open(GlobalOU.insert_file, """w""") as temp_file:
 			ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", self.ou_hierarchy))
-			temp_file.write(f"""dn: ou={self.ou_name}, {ous}, dc=localdomain\n""")
+			temp_file.write(f"""dn: ou={self.ou_name}, {ous}, dc={dc}\n""")
 			temp_file.write(f"""ou: {self.ou_name}\n""")
 			temp_file.write(f"""description: {self.description}\n""")
 			temp_file.write(f"""objectClass: top\n""")
@@ -24,7 +24,7 @@ class GlobalOU:
 		if ldappasswd != None:
 			options += f"""-w {ldappasswd}"""
 
-		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc=localdomain' -f {GlobalOU.insert_file} -x""", shell = True)
+		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc={dc}' -f {GlobalOU.insert_file} -x""", shell = True)
 		return result
 
 
