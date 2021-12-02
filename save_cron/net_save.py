@@ -2,13 +2,15 @@ import os
 import sys
 import subprocess
 
+# TODO : Being able to export commands to .sh files for cron/at
+
 class SCPManager:
 	def __init__(self, dest_addr: str = "", dest_user: str = ""):
 		self.dest_addr = dest_addr
 		self.dest_user = dest_user
 
 
-	def send_cmd(self, to_copy: str = None, dest_path: str = None):
+	def send_cmd(self, to_copy: str = None, dest_path: str = None):SS
 		return f"""/usr/bin/scp {to_copy} {self.dest_user}@{self.dest_addr}:{dest_path}"""
 
 
