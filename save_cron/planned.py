@@ -3,6 +3,7 @@ import sys
 import subprocess
 import datetime
 import uuid
+import stat
 
 '''TODO: Pour  des  raisons  de  sécurité,  il  est  possible  de  limiter  les  utilisateurs  autorisés  à  exécuter  ces 
 commandes. Par défaut, tous les utilisateurs peuvent programmer des tâches ponctuelles ou 
@@ -13,13 +14,13 @@ d’information, référez-vous aux pages de manuel de ces commandes.'''
 class RepeatTask:
 	dest_dir: str = f"""/var/pyad/jobs/cron"""
 
-	def __init__(self):
+	def __init__(self, name: str = None):
 		self.time = ""
 
 		if not os.path.isdir(RepeatTask.dest_dir):
 			os.makedirs(RepeatTask.dest_dir, mode=0o700)
 
-		self.job_file = f"""{uuid.uuid4()}.sh"""
+		self.job_file = name if name != None else f"""{uuid.uuid4()}.sh"""
 
 		self.minute = "*"
 		self.hour = "*"
@@ -49,19 +50,13 @@ class RepeatTask:
 		dest_file: str = f"""{RepeatTask.dest_dir}/{self.job_file}"""
 
 		with open(dest_file, "w") as job:
-			job.write(f"""{self.minute} {self.hour} {self.day} {self.month} {self.day_of_week} '""")
 			first: bool = True
 			for line in command_list:
-				if not first:
-					job.write(f""" && """)
-					first = False
+				job.write(f"""{line}\n""")
 
-				job.write(f"""{line}""")
-
-			job.write(f"""'""")
-
-		cmd: str = f"""/usr/bin/crontab -e {dest_file} """
-		print(cmd)
+		os.chmod(dest_file, 0o711)
+		cmd: str = f"""(/usr/bin/crontab -l 2>/dev/null; echo "{self.minute} {self.hour} {self.day} {self.month} {self.day_of_week} {dest_file}") | /usr/bin/crontab -"""
+		# print(cmd)
 		result = subprocess.run(cmd, shell = True)
 		return result
 
@@ -75,7 +70,8 @@ class OneTimeTask:
 		if not os.path.isdir(OneTimeTask.dest_dir):
 			os.makedirs(OneTimeTask.dest_dir, mode=0o700)
 
-		self.job_file = f"""{uuid.uuid4()}.sh"""
+		# self.job_file = f"""{uuid.uuid4()}.sh"""
+		self.job_file = name if name != None else f"""{uuid.uuid4()}.sh"""
 
 
 	def set_absolute_time(self, time: datetime):
@@ -92,7 +88,8 @@ class OneTimeTask:
 			if not keep_job_file:
 				job.write(f"""/usr/bin/rm {dest_file}\n""")
 
+		os.chmod(dest_file, 0o711)
 		cmd: str = f"""/usr/bin/at {self.time} -f "{dest_file}" """
-		result = subprocess.run(cmd, shell = True)
+		result += subprocess.run(cmd, shell = True)
 		return result
 
