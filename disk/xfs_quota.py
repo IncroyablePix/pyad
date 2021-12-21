@@ -33,9 +33,9 @@ class XFSQuota:
 			for line in lines:
 				temp_file.write(line)
 
-		result = subprocess.run(f"""/usr/bin/systemctl daemon-reload""", shell = True)
-		result += """\n"""
-		result += subprocess.run(f"""/usr/bin/mount {self.partition_name} -o remount""")
+		result = []
+		result.append(subprocess.run(f"""/usr/bin/systemctl daemon-reload""", shell = True))
+		result.append(subprocess.run(f"""/usr/bin/mount {self.partition_name} -o remount""", shell = True))
 
 		return result
 
