@@ -28,7 +28,6 @@ class LocalUser:
 		return result
 
 
-
 	def add_to_group(self, local_group: LocalGroup):
 		result = subprocess.run(f"""/usr/sbin/usermod -a -G {local_group.group_name} {self.user_name}""", shell = True)
 		return result

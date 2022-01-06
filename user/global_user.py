@@ -55,6 +55,11 @@ class GlobalUser:
 
 		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc={dc}' -f {GlobalUser.add_member_file} -x""", shell = True)
 		return result
+
+
+	def add_to_local_group(self, local_group: LocalGroup):
+		result = subprocess.run(f"""/usr/sbin/usermod -a -G {local_group.group_name} {self.user_name}""", shell = True)
+		return result
 	
 
 	@staticmethod
