@@ -18,8 +18,8 @@ class LocalUser:
 			elif isinstance(group, int):
 				options += f"""-g --gid {group}"""
 
-
-		result = subprocess.run(f"""/usr/sbin/useradd {options} -p {self.password} {self.user_name}""", shell = True)
+		# result = subprocess.run(f"""/usr/sbin/useradd {options} -p {self.password} {self.user_name}""", shell = True)
+		result = subprocess.run(f"""/usr/sbin/useradd {options} -p $(perl -e 'print crypt($ARGV[0], "password")' '{self.password}') {self.user_name}""", shell = True)
 		return result
 
 
