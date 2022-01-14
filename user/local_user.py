@@ -35,7 +35,7 @@ class LocalUser:
 		if print_result:
 			if result.returncode == 0:
 				print(f"""Local user {self.user_name} deleted.""")
-			else
+			else:
 				print(f"""Error deleting local user: {result.stdout0:-1].decode('ascii')}""")
 
 		return result

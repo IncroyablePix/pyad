@@ -40,23 +40,54 @@ class XFSQuota:
 		return result
 
 
-	def set_user_quota(self, user_name: str, soft: int, hard: int, path: str):
-		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit bsoft={soft}m bhard={hard}m {user_name}' {path}""", shell = True)
+	def display(self):
+		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'report -a -h' {self.partition_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+		if result.returncode == 0:
+			print(result.stdout.decode("ASCII"))
+
+	def set_user_quota(self, user_name: str, soft: int, hard: int, print_result: bool = True):
+		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit bsoft={soft}m bhard={hard}m {user_name}' {self.partition_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+		
+		if print_result:
+			if result.returncode == 0:
+				print(f"""Created user quota for {user_name} (Soft: {soft}M - Hard: {hard})""")
+			else:
+				print(f"""Error during user quota creation: {result.stdout[0:-1].decode('ascii')}""")
 		return result
 
 
-	def set_group_quota(self, group_name: str, soft: int, hard: int, path: str):
-		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit -g bsoft={soft}m bhard={hard}m {group_name}' {path}""", shell = True)
+	def set_group_quota(self, group_name: str, soft: int, hard: int, print_result: bool = True):
+		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit -g bsoft={soft}m bhard={hard}m {group_name}' {self.partition_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+		if print_result:
+			if result.returncode == 0:
+				print(f"""Created group quota for {self.group_name} (Soft: {soft}M - Hard: {hard})""")
+			else:
+				print(f"""Error during group quota creation: {result.stdout[0:-1].decode('ascii')}""")
 		return result
 		
 	
-	def set_project_quota(self, project_name: str, hard: int, project_id: int, path: str):
+	def set_project_quota(self, project_name: str, hard: int, project_id: int, path: str, print_result: bool = True):
 		with open(XFSQuota.project_file, """a""") as projects:
 			projects.write(f"""{project_id}:{path}\n""")
 
-		with open(XFSQuota.project_file, """a""") as projid:
+		with open(XFSQuota.projid_file, """a""") as projid:
 			projid.write(f"""{project_name}:{project_id}\n""")
 
-		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'project -s {project_name}' {self.partition_name}""", shell = True)
-		result += subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit -p bhard={hard}m {project_name}' {self.partition_name}""", shell = True)
+		result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'project -s {project_name}' {self.partition_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+		if result.returncode == 0:
+			if print_result:
+				print(f"""Created XFS project "{project_name}" """)
+			result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit -p bhard={hard}m {project_name}' {self.partition_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+			if print_result:
+				if result.returncode == 0:
+					print(f"""Added quota to project "{project_name}" """)
+				else:
+					print(f"""Error during project quota creation: {result.stdout[0:-1].decode('ascii')}""")
+		elif print_result:
+			print(f"""Error during XFS project creation: {result.stdout[0:-1].decode('ascii')}""")
+
 		return result
+

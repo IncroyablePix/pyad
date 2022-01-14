@@ -34,7 +34,7 @@ class LocalGroup:
 			if result.returncode == 0:
 				print(f"""Created local group {self.group_name}""")
 			else:
-				print(f"""Error local group creation: {result.stdout}""")
+				print(f"""Error local group creation: {result.stdout[0:-1].decode('ascii')}""")
 		return result
 
 
