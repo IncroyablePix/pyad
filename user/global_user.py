@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 from pyad.user.global_group import GlobalGroup
+from pyad.user.local_group import LocalGroup
 
 class GlobalUser:
 	insert_file = """/tmp/user.ldif"""
@@ -15,7 +16,7 @@ class GlobalUser:
 		self.password = GlobalUser.__hash_password(password)
 
 
-	def register(self, gid: int = None, ou_hierarchy: list = [], ldappasswd: str = None, dc: str = "localdomain"):
+	def register(self, gid: int = None, ou_hierarchy: list = [], ldappasswd: str = None, dc: str = "localdomain", print_result: bool = True):
 		with open(GlobalUser.insert_file, """w""") as temp_file:
 			ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", ou_hierarchy))
 			temp_file.write(f"""dn: uid={self.user_name},{ous},dc={dc}\n""")
@@ -38,7 +39,14 @@ class GlobalUser:
 		if ldappasswd != None:
 			options += f"""-w {ldappasswd}"""
 
-		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc={dc}' -f {GlobalUser.insert_file} -x""", shell = True)
+		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc={dc}' -f {GlobalUser.insert_file} -x""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+		if print_result:
+			if result.returncode == 0:
+				print(f"""Global user {self.user_name} created.""")
+			else:
+				print(f"""Error in global user creation: {result.stdout[0:-1].decode('ascii')}""")
+
 		return result
 
 	
@@ -53,12 +61,17 @@ class GlobalUser:
 		if ldappasswd != None:
 			options += f"""-w {ldappasswd}"""
 
-		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc={dc}' -f {GlobalUser.add_member_file} -x""", shell = True)
+		result = subprocess.run(f"""/usr/bin/ldapadd {options} -D 'cn=Directory Manager,dc={dc}' -f {GlobalUser.add_member_file} -x""", shell = True,  stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 		return result
 
 
-	def add_to_local_group(self, local_group: LocalGroup):
-		result = subprocess.run(f"""/usr/sbin/usermod -a -G {local_group.group_name} {self.user_name}""", shell = True)
+	def add_to_local_group(self, local_group: LocalGroup, print_result: bool = True):
+		result = subprocess.run(f"""/usr/sbin/usermod -a -G {local_group.group_name} {self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+		if print_result:
+			if result.returncode == 0:
+				print(f"""Global user {self.user_name} added to local group {local_group.group_name}""")
+			else:
+				print(f"""Error adding global user to local group: {result.stdout[0:-1].decode('ascii')}""")
 		return result
 	
 
