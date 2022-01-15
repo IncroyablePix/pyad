@@ -21,7 +21,7 @@ class Archive(ABC):
 
 class ZipArchive(Archive):
 	def archive_dir(self, archive_path: str = None, files: str = None, recursive: bool = True):
-		if not (directory == None or files == None):
+		if not (archive_path == None or files == None):
 			options: str = ""
 
 			if recursive:
@@ -34,7 +34,7 @@ class ZipArchive(Archive):
 
 
 	def extract_archive(self, archive_path: str = None, extract_path: str = None):
-		if not (archive_path == None):
+		if not (archive_path == None or extract_path == None):
 			options: str = ""
 			if extract_path == None:
 				options += f""" -d {extract_path} """
@@ -66,7 +66,7 @@ class TarArchive(Archive):
 
 
 	def archive_dir(self, archive_path: str = None, files: str = None, recursive: bool = True):
-		if not (directory == None or files == None):
+		if not (archive_path == None or files == None):
 			options: str = f"""-cv{self.compression}f"""
 
 			result = subprocess.run(f"""/usr/bin/tar {options} {archive_path} {files}""", shell = True)
@@ -76,7 +76,7 @@ class TarArchive(Archive):
 
 
 	def extract_archive(self, archive_path: str = None, extract_path: str = None):
-		if not (directory == None or files == None):
+		if not (archive_path == None or extract_path == None):
 			options: str = f"""-xv{self.compression}f"""
 
 			extract: str = "" if extract_path == None else f""" -C {extract_path} """

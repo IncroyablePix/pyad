@@ -10,7 +10,7 @@ class SCPManager:
 		self.dest_user = dest_user
 
 
-	def send_cmd(self, to_copy: str = None, dest_path: str = None):SS
+	def send_cmd(self, to_copy: str = None, dest_path: str = None):
 		return f"""/usr/bin/scp {to_copy} {self.dest_user}@{self.dest_addr}:{dest_path}"""
 
 

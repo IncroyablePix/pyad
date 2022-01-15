@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import re
-
+from pyad.utils.colors import TColor
 
 class XFSQuota:
 	disk_file = """/etc/fstab"""
@@ -33,9 +33,8 @@ class XFSQuota:
 			for line in lines:
 				temp_file.write(line)
 
-		result = []
-		result.append(subprocess.run(f"""/usr/bin/systemctl daemon-reload""", shell = True))
-		result.append(subprocess.run(f"""/usr/bin/mount {self.partition_name} -o remount""", shell = True))
+		result = subprocess.run(f"""/usr/bin/systemctl daemon-reload""", shell = True)
+		result = subprocess.run(f"""/usr/bin/mount {self.partition_name} -o remount""", shell = True)
 
 		return result
 
@@ -50,9 +49,9 @@ class XFSQuota:
 		
 		if print_result:
 			if result.returncode == 0:
-				print(f"""Created user quota for {user_name} (Soft: {soft}M - Hard: {hard})""")
+				print(f"""{TColor.OKGREEN}Created user quota for {user_name} (Soft: {soft}M - Hard: {hard}){TColor.ENDC}""")
 			else:
-				print(f"""Error during user quota creation: {result.stdout[0:-1].decode('ascii')}""")
+				print(f"""{TColor.FAIL}Error during user quota creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		return result
 
 
@@ -61,9 +60,9 @@ class XFSQuota:
 
 		if print_result:
 			if result.returncode == 0:
-				print(f"""Created group quota for {self.group_name} (Soft: {soft}M - Hard: {hard})""")
+				print(f"""{TColor.OKGREEN}Created group quota for {self.group_name} (Soft: {soft}M - Hard: {hard}){TColor.ENDC}""")
 			else:
-				print(f"""Error during group quota creation: {result.stdout[0:-1].decode('ascii')}""")
+				print(f"""{TColor.FAIL}Error during group quota creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		return result
 		
 	
@@ -78,16 +77,16 @@ class XFSQuota:
 
 		if result.returncode == 0:
 			if print_result:
-				print(f"""Created XFS project "{project_name}" """)
+				print(f"""{TColor.OKGREEN}Created XFS project "{project_name}"{TColor.ENDC}""")
 			result = subprocess.run(f"""/usr/sbin/xfs_quota -x -c 'limit -p bhard={hard}m {project_name}' {self.partition_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 			if print_result:
 				if result.returncode == 0:
-					print(f"""Added quota to project "{project_name}" """)
+					print(f"""{TColor.OKGREEN}Added quota to project "{project_name}{TColor.ENDC}" """)
 				else:
-					print(f"""Error during project quota creation: {result.stdout[0:-1].decode('ascii')}""")
+					print(f"""{TColor.FAIL}Error during project quota creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		elif print_result:
-			print(f"""Error during XFS project creation: {result.stdout[0:-1].decode('ascii')}""")
+			print(f"""{TColor.FAIL}Error during XFS project creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 
 		return result
 

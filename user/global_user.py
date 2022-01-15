@@ -3,6 +3,7 @@ import sys
 import subprocess
 from pyad.user.global_group import GlobalGroup
 from pyad.user.local_group import LocalGroup
+from pyad.utils.colors import TColor
 
 class GlobalUser:
 	insert_file = """/tmp/user.ldif"""
@@ -16,7 +17,7 @@ class GlobalUser:
 		self.password = GlobalUser.__hash_password(password)
 
 
-	def register(self, gid: int = None, ou_hierarchy: list = [], ldappasswd: str = None, dc: str = "localdomain", print_result: bool = True):
+	def register(self, gid: int = None, ou_hierarchy: list = [], ldappasswd: str = None, dc: str = "localdomain", home_base: str = "/home", print_result: bool = True):
 		with open(GlobalUser.insert_file, """w""") as temp_file:
 			ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", ou_hierarchy))
 			temp_file.write(f"""dn: uid={self.user_name},{ous},dc={dc}\n""")
@@ -33,7 +34,7 @@ class GlobalUser:
 			temp_file.write(f"""homeDirectory: /home/{self.user_name}\n""")
 			temp_file.write(f"""loginShell: /bin/bash\n""")
 
-		self.__create_home_dir()
+		self.__create_home_dir(home_base = home_base, gid = gid)
 
 		options: str = ""
 		if ldappasswd != None:
@@ -43,9 +44,9 @@ class GlobalUser:
 
 		if print_result:
 			if result.returncode == 0:
-				print(f"""Global user {self.user_name} created.""")
+				print(f"""{TColor.OKGREEN}Global user {self.user_name} created.{TColor.ENDC}""")
 			else:
-				print(f"""Error in global user creation: {result.stdout[0:-1].decode('ascii')}""")
+				print(f"""{TColor.FAIL}Error in global user creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 
 		return result
 
@@ -69,9 +70,9 @@ class GlobalUser:
 		result = subprocess.run(f"""/usr/sbin/usermod -a -G {local_group.group_name} {self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 		if print_result:
 			if result.returncode == 0:
-				print(f"""Global user {self.user_name} added to local group {local_group.group_name}""")
+				print(f"""{TColor.OKGREEN}Global user {self.user_name} added to local group {local_group.group_name}{TColor.ENDC}""")
 			else:
-				print(f"""Error adding global user to local group: {result.stdout[0:-1].decode('ascii')}""")
+				print(f"""{TColor.FAIL}Error adding global user to local group: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		return result
 	
 
@@ -81,8 +82,21 @@ class GlobalUser:
 		return result.stdout.decode().rstrip("""\n""")
 
 
-	def __create_home_dir(self):
-		subprocess.run(f"""/usr/bin/mkdir /home/{self.user_name}""", shell = True)
+	def __create_home_dir(self, home_base: str = "/home", gid: int = None, print_result: bool = True):
+		'''result = subprocess.run(f"""/usr/bin/mkdir {home_base}/{self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		
+		if print_result:
+			if result.returncode == 0:
+				print(f"""{TColor.OKGREEN}Home directory created{TColor.ENDC}""")
+			else:
+				print(f"""{TColor.FAIL}Failed to create directory {home_base}/{self.user_name}: {TColor.WARNING} {result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")'''
+		try:	
+			os.mkdir(f"""{home_base}/{self.user_name}""")
+			print(f"""{TColor.OKGREEN}Home directory created{TColor.ENDC}""")
+		except FileExistsError:
+			print(f"""{TColor.FAIL}Failed to create directory {home_base}/{self.user_name}: {TColor.WARNING} Already exists{TColor.ENDC}""")
+			
+		os.chown(f"""{home_base}/{self.user_name}""", self.uid, gid)
 
 
 	def __str__(self):

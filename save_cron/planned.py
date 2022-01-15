@@ -20,6 +20,15 @@ class RepeatTask:
 		if not os.path.isdir(RepeatTask.dest_dir):
 			os.makedirs(RepeatTask.dest_dir, mode=0o700)
 
+		if name != None:
+			split_tup = os.path.splitext(name)
+		
+			file_name = split_tup[0]
+			file_extension = split_tup[1]
+
+			if len(file_extension) == 0:
+				name = name + ".sh"
+
 		self.job_file = name if name != None else f"""{uuid.uuid4()}.sh"""
 
 		self.minute = "*"
@@ -64,13 +73,21 @@ class RepeatTask:
 class OneTimeTask:
 	dest_dir: str = f"""/var/pyad/jobs/at"""
 
-	def __init__(self):
+	def __init__(self, name: str = None):
 		self.time = ""
 		
 		if not os.path.isdir(OneTimeTask.dest_dir):
 			os.makedirs(OneTimeTask.dest_dir, mode=0o700)
+		
+		if name != None:
+			split_tup = os.path.splitext(name)
+		
+			file_name = split_tup[0]
+			file_extension = split_tup[1]
 
-		# self.job_file = f"""{uuid.uuid4()}.sh"""
+			if len(file_extension) == 0:
+				name = name + ".sh"
+
 		self.job_file = name if name != None else f"""{uuid.uuid4()}.sh"""
 
 
@@ -78,7 +95,7 @@ class OneTimeTask:
 		self.time = f"""{time.hour:02d}:{time.minute:02d} {time.strftime("%b").lower()} {time.day:02d}  {time.year}"""
 
 	
-	def execute(self, command_list: list = [], keep_job_file: bool = False):
+	def execute(self, command_list: list = [], keep_job_file: bool = False, print_result: bool = True):
 		dest_file: str = f"""{OneTimeTask.dest_dir}/{self.job_file}"""
 
 		with open(dest_file, "w") as job:
@@ -90,6 +107,13 @@ class OneTimeTask:
 
 		os.chmod(dest_file, 0o711)
 		cmd: str = f"""/usr/bin/at {self.time} -f "{dest_file}" """
-		result += subprocess.run(cmd, shell = True)
+		result = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+		if print_result:		
+			if result.returncode == 0:
+				print(f"""Created task {self.job_file}""")
+			else:
+				print(f"""Error during creating task {self.job_file}: {result.stdout[0:-1].decode('ascii')}""")
+
 		return result
 

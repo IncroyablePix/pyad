@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 from pyad.user.local_group import LocalGroup
+from pyad.utils.colors import TColor
 
 class LocalUser:
 	def __init__(self, user_name: str, password: str = ""):
@@ -22,9 +23,9 @@ class LocalUser:
 		result = subprocess.run(f"""/usr/sbin/useradd {options} -p $(perl -e 'print crypt($ARGV[0], "password")' '{self.password}') {self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 		if print_result:
 			if result.returncode == 0:
-				print(f"""Local user {self.user_name} created.""")
+				print(f"""{TColor.OKGREEN}Local user {self.user_name} created.{TColor.ENDC}""")
 			else:
-				print(f"""Error in local user creation: {result.stdout[0:-1].decode('ascii')}""")
+				print(f"""{TColor.FAIL}Error in local user creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		
 		return result
 
@@ -34,9 +35,9 @@ class LocalUser:
 		
 		if print_result:
 			if result.returncode == 0:
-				print(f"""Local user {self.user_name} deleted.""")
+				print(f"""{TColor.OKGREEN}Local user {self.user_name} deleted.{TColor.ENDC}""")
 			else:
-				print(f"""Error deleting local user: {result.stdout0:-1].decode('ascii')}""")
+				print(f"""{TColor.FAIL}Error deleting local user: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 
 		return result
 
@@ -45,9 +46,9 @@ class LocalUser:
 		result = subprocess.run(f"""/usr/sbin/usermod -a -G {local_group.group_name} {self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 		if print_result:
 			if result.returncode == 0:
-				print(f"""Local user {self.user_name} added to local group {local_group.group_name}""")
+				print(f"""{TColor.OKGREEN}Local user {self.user_name} added to local group {local_group.group_name}{TColor.ENDC}""")
 			else:
-				print(f"""Error adding local user to local group: {result.stdout[0:-1].decode('ascii')}""")
+				print(f"""{TColor.FAIL}Error adding local user to local group: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		return result
 
 
