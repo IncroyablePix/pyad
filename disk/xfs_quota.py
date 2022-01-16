@@ -60,7 +60,7 @@ class XFSQuota:
 
 		if print_result:
 			if result.returncode == 0:
-				print(f"""{TColor.OKGREEN}Created group quota for {self.group_name} (Soft: {soft}M - Hard: {hard}){TColor.ENDC}""")
+				print(f"""{TColor.OKGREEN}Created group quota for {group_name} (Soft: {soft}M - Hard: {hard}){TColor.ENDC}""")
 			else:
 				print(f"""{TColor.FAIL}Error during group quota creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		return result
