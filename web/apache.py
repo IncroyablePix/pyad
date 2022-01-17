@@ -36,12 +36,20 @@ def add_authentication(path: str = None, pass_path: str = "/etc/httpd/apache-use
 			
 			
 
-def add_tls_private_key(path: str = "", password: str = ""):
+def add_tls_private_key(path: str = "", password: str = "", print_result: bool = True):
 	file_name = path.split("/")[-1]
-	new_path = f"""/etc/pki/tls/private/{file_name}"""
-	result = subprocess.run(f"""/usr/bin/cp {path} {new_path}""")
+	new_path = f"""/etc/pki/tls/private"""
+	print(path, new_path)
+	result = subprocess.run(f"""/usr/bin/cp {path} {new_path}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 	os.chown(new_path, 0, 0) # uid 0 = root / gid 0 = root
 	os.chmod(new_path, 0o600)
+	
+	if print_result:
+		if result.returncode == 0:
+			print(f"""{TColor.OKGREEN}Added private key '{path}'.{TColor.ENDC}""")
+		else:
+			print(f"""{TColor.FAIL}Error adding private key: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
+			
 	
 	
 def toggle_users_websites(toggle: bool = True, home_base: str = "/home", directory: str = "public_html", path: str = "/etc/httpd/conf.d/userdir.conf", print_result: bool = True):

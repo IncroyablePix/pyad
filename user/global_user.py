@@ -60,6 +60,9 @@ class GlobalUser(User):
 			
 	def delete(self, samba_user: bool = True, ou_hierarchy: list = [], ldappasswd: str = None, dc: str = "localdomain", print_result: bool = True):
 
+		if samba_user:
+			self.toggle_samba(toggle = False)
+			
 		options: str = ""
 		if ldappasswd != None:
 			options += f"""-w {ldappasswd}"""
@@ -71,10 +74,6 @@ class GlobalUser(User):
 				print(f"""{TColor.OKGREEN}Global user {self.user_name} deleted.{TColor.ENDC}""")
 			else:
 				print(f"""{TColor.FAIL}Error deleting global user: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
-
-		
-		if samba_user:
-			self.toggle_samba(toggle = False)
 	
 
 		return result

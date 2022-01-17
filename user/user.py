@@ -14,6 +14,26 @@ class User(ABC):
 		self.user_name = user_name
 		self.password = password
 		
+	def toggle_ftp_navigate(self, toggle: bool = True, path: str = "/etc/vsftpd/chroot_list", print_result: bool = True):
+		if not os.path.exists(path):
+			print(f"""{TColor.FAIL}Error adding user to FTP navigation: {TColor.WARNING}List '{path}' does not exist.{TColor.ENDC}""")
+			return
+			
+		with open(path, "a") as f: 
+			f.write(f"""{self.user_name}\n""")
+			
+		print(f"""{TColor.OKGREEN}User successfully added to chroot list{TColor.ENDC}""")
+	
+	def add_to_ftp_whitelist(self, path: str = "/etc/vsftpd/user_list", print_result: bool = True):
+		if not os.path.exists(path):
+			print(f"""{TColor.FAIL}Error adding user to FTP whitelist: {TColor.WARNING}List '{path}' does not exist.{TColor.ENDC}""")
+			return
+			
+		with open(path, "a") as f: 
+			f.write(f"""{self.user_name}\n""")
+			
+		print(f"""{TColor.OKGREEN}User successfully added to FTP whitelist.{TColor.ENDC}""")
+		
 	
 	def toggle_apache(self, passwd_file: str = None, toggle: bool = True, print_result: bool = True):
 		result = None

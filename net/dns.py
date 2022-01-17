@@ -114,11 +114,12 @@ class DNSZone(DNSFile):
 		super(DNSZone, self).__init__(domain_name = domain_name, ttl = ttl, serial = serial, refresh = refresh, retry = retry, expire = expire, name_error = name_error, soa = soa)
 		
 		
-	def write(self, scope: str = "internal", path: str = """/var/named/chroot/etc/named""", print_result: bool = True):
+	def write(self, scope: str = "internal", path: str = """/var/named/chroot/var/named""", print_result: bool = True):
 		if print_result: 
 			print(f"""{TColor.OKGREEN}Writing {scope} DNS Zone ({self.domain_name})...{TColor.ENDC}""")
 			
-		with open(f"""{path}/db.{self.domain_name}.{scope}""", "w") as f:
+			
+		with open(f"""{path}/db.{self.domain_name}.{scope}""", "w+") as f:
 			f.write(f"""$TTL\t{self.ttl}\n""")
 			f.write(f"""@\tIN\t""")
 			if self.soa:
@@ -172,11 +173,11 @@ class DNSReverse(DNSFile):
 		self.ip = ".".join(ip.split(".")[0:3])
 	
 		
-	def write(self, path: str = """/var/named/chroot/etc/named""", print_result: bool = True):
+	def write(self, path: str = """/var/named/chroot/var/named""", print_result: bool = True):
 		if print_result: 
 			print(f"""{TColor.OKGREEN}Writing DNS Reverse Lookup Zone ({self.ip}.x)...{TColor.ENDC}""")
 			
-		with open(f"""{path}/db.{self.ip}""", "w") as f:
+		with open(f"""{path}/db.{self.ip}""", "w+") as f:
 			f.write(f"""$TTL\t{self.ttl}\n""")
 			f.write(f"""@\tIN\t""")
 			if self.soa:

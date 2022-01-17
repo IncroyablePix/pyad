@@ -42,6 +42,9 @@ class LocalUser(User):
 			
 			
 	def delete(self, samba_user: bool = True, print_result: bool = True):
+		if samba_user:
+			self.toggle_samba(toggle = False)
+			
 		result = subprocess.run(f"""/usr/sbin/userdel {self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 		
 		if print_result:
@@ -49,10 +52,6 @@ class LocalUser(User):
 				print(f"""{TColor.OKGREEN}Local user {self.user_name} deleted.{TColor.ENDC}""")
 			else:
 				print(f"""{TColor.FAIL}Error deleting local user: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
-
-		
-		if samba_user:
-			self.toggle_samba(toggle = False)	
 
 		return result
 
