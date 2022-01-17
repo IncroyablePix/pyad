@@ -3,9 +3,41 @@ import re
 import sys
 import subprocess
 from os.path import exists
+from pyad.utils.colors import TColor
+
+class ACL:
+	def __init__(self, p_type: str = "user", principal: str = "", read: bool = True, write: bool = True, execute: bool = True, default: bool = True):
+		self.p_type = "u"
+		
+		if p_type == "user" or p_type == "u":
+			self.p_type = "u"
+		elif p_type == "group" or p_type == "g":
+			self.p_type = "g"
+		else:
+			self.p_type = "o"
+			
+		self.principal = principal
+		self.read = read
+		self.write = write
+		self.execute = execute
+		self.default = default
+		
+		
+	def perm(self):
+		permission = ""
+		
+		permission += "r" if self.read else "-"
+		permission += "w" if self.write else "-"
+		permission += "x" if self.execute else "-"
+		return permission
+		
+	
+	def get_line(self):
+		return f"""{"d:" if self.default else ""}{self.p_type}:{self.principal}:{self.perm()}"""
+		
 
 class ACLFile:
-	def __init__(self, path: str = None):
+	def __init__(self, path: str = None, pre_process: bool = False):
 		if not exists(path):
 			raise Exception(f""""{path}" is invalid""")
 
@@ -21,7 +53,34 @@ class ACLFile:
 		self.groups = {}
 		self.inherited = {}
 		self.users = {}
+		
+		self.acls = []
 
+		if pre_process:
+			self.get_acls()
+			
+			
+	def add_acls(self, acls = None):
+		if type(acls) is list:
+			for acl in acls:
+				self.add_acls(acl)
+		elif type(acls) is ACL:
+			if acls not in self.acls:
+				self.acls.append(acls)
+				
+
+	def set_acls(self, print_result: bool = True):
+		to_add = " ".join(map(lambda a: f"""-m {a.get_line()}""", self.acls))
+		result = subprocess.run(f"""/usr/bin/setfacl {to_add} {self.path}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+		
+		if print_result:
+			if result.returncode == 0:
+				print(f"""{TColor.OKGREEN}ACLs added for file {self.path}{TColor.ENDC}""")
+			else:
+				print(f"""{TColor.FAIL}Error adding ACLs for file {self.path}: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
+	
+	
+	def get_acls(self):
 		result = subprocess.run(f"""/usr/bin/getfacl {path}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 		
 		if result.returncode != 0:		
