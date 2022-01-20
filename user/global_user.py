@@ -18,7 +18,7 @@ class GlobalUser(User):
 		self.hashed_password = GlobalUser.__hash_password(password)
 
 
-	def register(self, gid: int = None, ou_hierarchy: list = [], ldappasswd: str = None, dc: str = "localdomain", home_base: str = "/home", samba_user: bool = True, apache_dir: str = "public_html", print_result: bool = True):
+	def register(self, gid: int = None, ou_hierarchy: list = [], ldappasswd: str = None, dc: str = "localdomain", home_base: str = "/home", samba_user: bool = True, apache_dir: str = "public_html", mail: str = None, print_result: bool = True):
 		with open(GlobalUser.insert_file, """w""") as temp_file:
 			ous: str = """, """.join(map(lambda ou : f"""ou={ou}""", ou_hierarchy))
 			temp_file.write(f"""dn: uid={self.user_name},{ous},dc={dc}\n""")
@@ -54,6 +54,9 @@ class GlobalUser(User):
 			
 		if apache_dir != None:
 			self.add_apache_dir(directory = apache_dir, user_home = home_base)
+			
+		if mail != None:
+			self.add_mail_address(mail = mail)
 
 		return result			
 			
@@ -115,7 +118,7 @@ class GlobalUser(User):
 			print(f"""{TColor.FAIL}Failed to create directory {home_base}/{self.user_name}: {TColor.WARNING} Already exists{TColor.ENDC}""")
 			
 		os.chown(f"""{home_base}/{self.user_name}""", self.uid, gid)
-		os.chmod(f"""{home_base}/{self.user_name}""", 0o751)
+		os.chmod(f"""{home_base}/{self.user_name}""", 0o711)
 
 
 	def __str__(self):

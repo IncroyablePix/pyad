@@ -13,6 +13,7 @@ class User(ABC):
 	def __init__(self, user_name: str = "", password: str = ""):
 		self.user_name = user_name
 		self.password = password
+
 		
 	def toggle_ftp_navigate(self, toggle: bool = True, path: str = "/etc/vsftpd/chroot_list", print_result: bool = True):
 		if not os.path.exists(path):
@@ -23,6 +24,7 @@ class User(ABC):
 			f.write(f"""{self.user_name}\n""")
 			
 		print(f"""{TColor.OKGREEN}User successfully added to chroot list{TColor.ENDC}""")
+		
 	
 	def add_to_ftp_whitelist(self, path: str = "/etc/vsftpd/user_list", print_result: bool = True):
 		if not os.path.exists(path):
@@ -35,6 +37,48 @@ class User(ABC):
 		print(f"""{TColor.OKGREEN}User successfully added to FTP whitelist.{TColor.ENDC}""")
 		
 	
+	def add_mail_address(self, mail: str = None, virtual_repo: str = "/etc/postfix/virtual", print_result: bool = True):
+		self.add_to_group(local_group = "mail")
+				
+	
+		mail_path = f"""/var/spool/mail/{self.user_name}"""
+		if not os.path.exists(mail_path):
+			with open(mail_path, "w"):
+				pass
+			uid = pwd.getpwnam(self.user_name).pw_uid
+			gid = grp.getgrnam("mail").gr_gid
+			os.chown(mail_path, uid, gid)
+			os.chmod(mail_path, 0o660)
+		
+		with open(virtual_repo, "a+") as f:
+			f.write(f"""{mail}\t\t{self.user_name}\n""")
+		
+		if print_result:
+			print(f"""{TColor.OKGREEN}Mail address '{mail}' for '{self.user_name}' created.{TColor.ENDC}""")
+					
+		
+	def remove_mail_address(self, mail: str = None, virtual_repo: str = "/etc/postfix/virtual"):
+		if mail != None:
+			lines = []
+			found = 0
+			with open(virtual_repo, "r") as f:
+				lines = f.readlines()
+				
+			with open(virtual_repo, "w") as f:
+				for line in lines:
+					l = line.strip("\n")
+					if self.user_name not in l and mail not in l:
+						f.write(line)
+					else:
+						found = found + 1
+		
+		if print_result:
+			if found > 0:
+				print(f"""{TColor.OKGREEN}{found} mail address(es) '{mail}' for '{self.user_name}' deleted.{TColor.ENDC}""")
+			else:
+				print(f"""{TColor.FAIL}Error deleting mail address: {TColor.WARNING}None was found{TColor.ENDC}""")
+
+
 	def toggle_apache(self, passwd_file: str = None, toggle: bool = True, print_result: bool = True):
 		result = None
 		if passwd_file != None:
@@ -99,11 +143,18 @@ class User(ABC):
 					print(f"""{TColor.FAIL}Error deleting samba user: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 					
 
-	def add_to_group(self, local_group: LocalGroup, print_result: bool = True):
-		result = subprocess.run(f"""/usr/sbin/usermod -a -G {local_group.group_name} {self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+	def add_to_group(self, local_group, print_result: bool = True):
+		group_name = ""
+		if isinstance(local_group, LocalGroup):
+			group_name = local_group.group_name
+		elif isinstance(local_group, str):
+			group_name = local_group
+		
+		result = subprocess.run(f"""/usr/sbin/usermod -a -G {group_name} {self.user_name}""", shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 		if print_result:
 			if result.returncode == 0:
-				print(f"""{TColor.OKGREEN}Global user {self.user_name} added to local group {local_group.group_name}{TColor.ENDC}""")
+				print(f"""{TColor.OKGREEN}User {self.user_name} added to local group {group_name}{TColor.ENDC}""")
 			else:
-				print(f"""{TColor.FAIL}Error adding global user to local group: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
+				print(f"""{TColor.FAIL}Error adding user to local group: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 		return result
+		

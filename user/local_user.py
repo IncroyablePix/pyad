@@ -11,7 +11,7 @@ class LocalUser(User):
 		self.full_name = full_name
 
 
-	def register(self, group = -1, samba_user: bool = True, apache_dir: str = "public_html", print_result: bool = True):
+	def register(self, group = -1, samba_user: bool = True, mail: str = None, apache_dir: str = "public_html", print_result: bool = True):
 		options: str = ""
 
 		if group != -1:
@@ -30,13 +30,16 @@ class LocalUser(User):
 			else:
 				print(f"""{TColor.FAIL}Error in local user creation: {TColor.WARNING}{result.stdout[0:-1].decode('ascii')}{TColor.ENDC}""")
 
-		os.chmod(f"""/home/{self.user_name}""", 0o751)
+		os.chmod(f"""/home/{self.user_name}""", 0o711)
 		
 		if samba_user:
 			self.toggle_samba(toggle = True)
 			
 		if apache_dir != None:
 			self.add_apache_dir(directory = apache_dir, user_home = "/home")
+			
+		if mail != None:
+			self.add_mail_address(mail = mail)
 		
 		return result
 			
